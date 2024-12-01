@@ -1,5 +1,5 @@
 # RE-Control
-[Paper Link](https://arxiv.org/abs/2406.05954)
+🔥[Aligning Large Language Models with Representation Editing: A Control Perspective](https://arxiv.org/abs/2406.05954)
 
 RE-Control aligns LLMs by introducing external control signals into the hidden states of a pre-trained LLM during test time. 
 
