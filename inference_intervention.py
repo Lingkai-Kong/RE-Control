@@ -44,7 +44,8 @@ class DataCollatorReward:
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('model_name', type=str, default='vicuna_7B')
+    parser.add_argument('--model_name', type=str, default='vicuna_7B', choices=["vicuna_7B", "falcon_7B", "llama3_8B"])
+    parser.add_argument('--dataset_name', type=str, default='hh_rlhf', choices=["hh_rlhf", "shp"])
     parser.add_argument('--device', type=int, default=2)
     parser.add_argument('--use_intervention', default=False)
     parser.add_argument('--value_lr', default=0.0001)
@@ -57,14 +58,21 @@ def main():
 
         value_model = ValueFunction(input_dim=4096, hidden_dim=4096, output_dim=1)
         ##load weights
-        value_model.load_state_dict(torch.load(f'./trained_model/value_model_vicuna_{args.value_lr}.pth'))
+        value_model.load_state_dict(torch.load(f'trained_model/value_model_{args.model_name}_{args.dataset_name}_{args.value_lr}.pth'))
  
 
-    MODEL_NAMES = {
-        'vicuna_7B': 'lmsys/vicuna-7b-v1.5',
+    MODEL_NAMES = { 
+        'vicuna_7B': 'lmsys/vicuna-7b-v1.5', 
         'falcon_7B': 'tiiuae/falcon-7b-instruct',
+        'llama3_8B': 'meta-llama/Meta-Llama-3-8B'
+    }
+
+    DATASET_NAMES = { 
+        'hh_rlhf': 'Anthropic/hh-rlhf', 
+        'shp': 'stanfordnlp/SHP'
     }
     MODEL = MODEL_NAMES[args.model_name]
+    DATASET = DATASET_NAMES[args.dataset_name]
     tokenizer = LlamaTokenizer.from_pretrained(MODEL, padding_side='left')
 
     device = f"cuda:{args.device}" if torch.cuda.is_available() else "cpu"
@@ -79,24 +87,37 @@ def main():
     model.generation_config.temperature = None
     model.generation_config.top_k = None
     model.to(device)
+   
+    dataset = load_dataset(DATASET)
 
-    dataset = load_dataset("Anthropic/hh-rlhf", cache_dir='./huggingface_cache')
-    dataset = dataset.remove_columns("rejected")
-    for split in dataset.keys():
-        dataset[split] = dataset[split].rename_column('chosen', 'prompt')
-
-    def preprocessing(example):
-            
-        replaced_text = example['prompt'].replace("Human:", "USER:")
-        replaced_text = replaced_text.replace("Assistant:", "ASSISTANT:")
-
-        parts = replaced_text.rsplit("ASSISTANT:", 1)  # Split the string at the last occurrence of "Assistant:"
-        result = parts[0] + "ASSISTANT:"  # Append "Assistant:" back to the first part if needed   
-        # result = "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user’s questions." + parts[0] + "Assistant:"  # Append "Assistant:" back to the first part if needed 
-       
-        return {'prompt': result} # return the modified example dictionary
+    if args.dataset_name == 'hh_rlhf':
+        dataset = dataset.remove_columns("rejected")
+        for split in dataset.keys():
+            dataset[split] = dataset[split].rename_column('chosen', 'prompt')
     
+
+    if args.model_name == 'vicuna_7B':
+        begin_word = 'Human: '
+    elif args.model_name == 'llama3_8B':
+        begin_word = 'User: '
+    elif args.model_name == 'falcon_7B':
+        begin_word = 'User: '
+
+    def tokenize(example):
+        if args.dataset_name == 'hh_rlhf':
+            replaced_text = example['prompt'].replace("Human:", begin_word)
+            parts = replaced_text.rsplit("Assistant:", 1)  # Split the string at the last occurrence of "Assistant:"
+            result = parts[0] + "Assistant:"  # Append "Assistant:" back to the first part if needed
+        elif args.dataset_name == 'shp':
+            text = example['history']
+            result = begin_word + text + "\nAssistant:"    
+        tokenized = tokenizer(result, truncation=True)
     
+        example["input_ids"] = tokenized["input_ids"]
+        example["attention_mask"] = tokenized["attention_mask"]
+
+        return example
+
     dataset = dataset.map(preprocessing)
     dataloader = DataLoader(dataset['test'], batch_size=15) # only use the test set for now
     if tokenizer.pad_token is None:
@@ -118,9 +139,9 @@ def main():
     if not os.path.exists('response'):
         os.makedirs('response')
     if args.use_intervention:
-            file_name = os.path.join('response', f"{args.model_name}_{args.value_lr}_{args.epochs}_{args.lr}.json")
+            file_name = os.path.join('response', f"{args.model_name}_{args.dataset_name}_{args.value_lr}_{args.epochs}_{args.lr}.json")
     else:
-        file_name = os.path.join('response', f"{args.model_name}_base.json")
+        file_name = os.path.join('response', f"{args.model_name}_{args.dataset_name}_base.json")
 
     with open(file_name, 'w') as f:
         json.dump(generated_responses, f, ensure_ascii=False)

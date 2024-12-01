@@ -1,7 +1,7 @@
 # RE-Control
 [Paper Link](https://arxiv.org/abs/2406.05954)
 
-Aligning large language models (LLMs) with human objectives is crucial for real-world applications. However, fine-tuning LLMs for alignment often suffers from unstable training and requires substantial computing resources. Test-time alignment techniques, such as prompting and guided decoding, do not modify the underlying model, and their performance remains dependent on the original model's capabilities. To address these challenges, we propose aligning LLMs through representation editing. The core of our method is to view a pre-trained autoregressive LLM as a discrete-time stochastic dynamical system. To achieve alignment for specific objectives, we introduce external control signals into the state space of this language dynamical system. We train a value function directly on the hidden states according to the Bellman equation, enabling gradient-based optimization to obtain the optimal control signals at test time. Our experiments demonstrate that our method outperforms existing test-time alignment techniques while requiring significantly fewer resources compared to fine-tuning methods.
+RE-Control aligns LLMs by introducing external control signals into the hidden states of a pre-trained LLM during test time. 
 
 ![image](overview.jpg)
 
@@ -9,20 +9,35 @@ Aligning large language models (LLMs) with human objectives is crucial for real-
 
 There are two environments for this project. For all programs except metrics.py you can use the environment llm.txt. For metrics.py, you can use the environment metric.txt.
 
-Prepare the activation dataset:
+## Installation (RE-Control)
 
-`python get_activations_only.py --model_name vicuna_7B --dataset_name Anthropic/hh-rlhf`
+Clone project and create environment with conda:
+```
+conda create -n recontrol python==3.10
+conda activate recontrol
 
-Label the activation with reward:
+pip install -r llm.txt
+```
 
-`python reward_label.py --mode train`
+**Note**: you may need to adjust the torch (cuda) version according to your GPU.
+
+## Training process
+
+First, we need to get the activations from the LLM:
+
+`python get_activations_only.py --model_name vicuna_7B --dataset_name hh_rlhf`
+
+Then, we need to label the activations with a reward model:
+
+`python reward_label.py --model_name vicuna_7B --dataset_name hh_rlhf --reward_model argsearch/llama-7b-rm-float32 --mode train`
 
 Train a value model:  
-`python train_value_model.py vicuna hhrlhf --lr 0.0001 --device 0`
+`python train_value_model.py --model_name vicuna_7B --dataset_name hh_rlhf --lr 0.0001 --device 0`
 
 Conduct intervened inference:  
-`python inference_intervention.py vicuna_7B --use_intervention True --lr 0.5 --epochs 30 --value_lr 0.0001 --device 2`
+`python inference_intervention.py --model_name vicuna_7B --dataset_name hh_rlhf --use_intervention True --lr 0.5 --epochs 30 --value_lr 0.0001 --device 0`
 
+## Evaluation process
 Evaluate the average reward:  
 `python measure_reward_final.py --out_file vicuna`
 
@@ -31,3 +46,18 @@ Evaluate the diversity and coherence:
 
 Evaluate the GPT-4 win rate:  
 `python gpt4_eval.py --run_name_red vicuna`
+
+
+## Citation
+If you find our work helpful, please consider citing our paper:
+
+```
+@article{Kong2024AligningLL,
+  title={Aligning Large Language Models with Representation Editing: A Control Perspective},
+  author={Lingkai Kong and Haorui Wang and Wenhao Mu and Yuanqi Du and Yuchen Zhuang and Yifei Zhou and Yue Song and Rongzhi Zhang and Kai Wang and Chao Zhang},
+  journal={ArXiv},
+  year={2024},
+  volume={abs/2406.05954},
+  url={https://api.semanticscholar.org/CorpusID:270372048}
+}
+```

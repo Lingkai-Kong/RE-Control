@@ -23,12 +23,12 @@ class ValueFunction(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
         super(ValueFunction, self).__init__()
         self.fc1 = nn.Linear(input_dim, hidden_dim)
-        # self.fc2 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = nn.Linear(hidden_dim, output_dim)
     
     def forward(self, x):
         x = F.relu(self.fc1(x))
-        # x = F.relu(self.fc2(x))
+        x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
 
@@ -136,8 +136,8 @@ class TensorDataset(Dataset):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('model_name', type=str, default='llama_7B')
-    parser.add_argument('dataset_name', type=str, default='tqa_mc2')
+    parser.add_argument('--model_name', type=str, default='vicuna_7B', choices=["vicuna_7B", "falcon_7B", "llama3_8B"])
+    parser.add_argument('--dataset_name', type=str, default='hh_rlhf', choices=["hh_rlhf", "shp"])
     parser.add_argument('--device', type=int, default=3)
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--lr', type=float, default=1e-4)
@@ -150,13 +150,13 @@ def main():
     ## load the value function model, 
     value_model = ValueFunction(input_dim=4096, hidden_dim=4096, output_dim=1)
 
-    hidden_states_train = torch.load('features/token_wise_activations_train.pth')
-    labels_train = torch.load('features/labels_train.pth')
-    mask_train = torch.load('features/mask_train.pth')
+    hidden_states_train = torch.load('features/'+ str(args.model_name) + '_' + str(args.dataset_name) + '_' +'token_wise_activations_train.pth')
+    labels_train = torch.load('features/'+ str(args.model_name) + '_' + str(args.dataset_name) + '_' +'labels_train.json')
+    mask_train = torch.load('features/'+ str(args.model_name) + '_' + str(args.dataset_name) + '_' +'mask_train.pth')
 
-    hidden_states_test = torch.load('features/token_wise_activations_test.pth')
-    labels_test = torch.load('features/labels_test.pth')
-    mask_test = torch.load('features/mask_test.pth')
+    hidden_states_test = torch.load('features/'+ str(args.model_name) + '_' + str(args.dataset_name) + '_' +'token_wise_activations_test.pth')
+    labels_test = torch.load('features/'+ str(args.model_name) + '_' + str(args.dataset_name) + '_' +'labels_test.json')
+    mask_test = torch.load('features/'+ str(args.model_name) + '_' + str(args.dataset_name) + '_' +'mask_test.pth')
 
 
     train_dataset = TensorDataset(hidden_states_train, labels_train, mask_train)
@@ -182,9 +182,9 @@ def main():
 
         if not os.path.exists('trained_model'):
             os.makedirs('trained_model')
-        torch.save(value_model.state_dict(), f'trained_model/value_model_{args.model_name}_{args.lr}.pth')
+        torch.save(value_model.state_dict(), f'trained_model/value_model_{args.model_name}_{args.dataset_name}_{args.lr}.pth')
         if (epoch+1) % 10 == 0:
-            torch.save(value_model.state_dict(), f'trained_model/value_model_{args.model_name}_{args.lr}_{epoch+1}.pth')
+            torch.save(value_model.state_dict(), f'trained_model/value_model_{args.model_name}_{args.dataset_name}_{args.lr}_{epoch+1}.pth')
 
 if __name__ == '__main__':
     main()
