@@ -25,17 +25,17 @@ pip install -r llm.txt
 
 First, we need to get the activations from the LLM:
 
-`python get_activations_only.py --model_name vicuna_7B --dataset_name hh_rlhf`
+`python get_activations_only.py --model_name llama3_8B --dataset_name shp`
 
 Then, we need to label the activations with a reward model:
 
-`python reward_label.py --model_name vicuna_7B --dataset_name hh_rlhf --reward_model argsearch/llama-7b-rm-float32 --mode train`
+`python reward_label.py --model_name llama3_8B --dataset_name shp --reward_model argsearch/llama-7b-rm-float32 --mode train`
 
 Train a value model:  
-`python train_value_model.py --model_name vicuna_7B --dataset_name hh_rlhf --lr 0.0001 --device 0`
+`python train_value_model.py --model_name llama3_8B --dataset_name shp --lr 0.0001`
 
 Conduct intervened inference:  
-`python inference_intervention.py --model_name vicuna_7B --dataset_name hh_rlhf --use_intervention True --lr 0.5 --epochs 30 --value_lr 0.0001 --device 0`
+`python inference_intervention.py --model_name llama3_8B --dataset_name shp --use_intervention True --lr 1.0 --epochs 30 --value_lr 0.0001`
 
 ## Evaluation process
 Evaluate the average reward:  
@@ -55,9 +55,9 @@ If you find our work helpful, please consider citing our paper:
 @article{Kong2024AligningLL,
   title={Aligning Large Language Models with Representation Editing: A Control Perspective},
   author={Lingkai Kong and Haorui Wang and Wenhao Mu and Yuanqi Du and Yuchen Zhuang and Yifei Zhou and Yue Song and Rongzhi Zhang and Kai Wang and Chao Zhang},
-  journal={ArXiv},
   year={2024},
-  volume={abs/2406.05954},
-  url={https://api.semanticscholar.org/CorpusID:270372048}
+  eprint={2406.05954},
+  archivePrefix={arXiv},
+  primaryClass={cs.AI}
 }
 ```
