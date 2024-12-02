@@ -29,7 +29,7 @@ First, we need to get the activations from the LLM:
 
 Then, we need to label the activations with a reward model:
 
-`python reward_label.py --model_name llama3_8B --dataset_name shp --reward_model argsearch/llama-7b-rm-float32 --mode train`
+`python reward_label.py --model_name llama3_8B --dataset_name shp --reward_model openbmb/UltraRM-13b --mode train`
 
 Train a value model:  
 `python train_value_model.py --model_name llama3_8B --dataset_name shp --lr 0.0001`
@@ -39,13 +39,13 @@ Conduct intervened inference:
 
 ## Evaluation process
 Evaluate the average reward:  
-`python measure_reward_final.py --out_file vicuna`
+`python measure_reward.py --out_file llama3_8B_shp_0.0001_30_0.5 --model_name llama3_8B --dataset_name shp --reward_model openbmb/UltraRM-13b`
 
 Evaluate the diversity and coherence:  
-`python metrics_final.py --run_name vicuna`
+`python metrics.py --run_name llama3_8B_shp_0.0001_30_0.5`
 
 Evaluate the GPT-4 win rate:  
-`python gpt4_eval.py --run_name_red vicuna`
+`python gpt4_eval.py --run_name_red llama3_8B_shp_0.0001_30_0.5 --run_name_blue $put the prefered answer in the dataset here`
 
 
 ## Citation
