@@ -47,6 +47,7 @@ Evaluate the diversity and coherence:
 Evaluate the GPT-4 win rate:  
 `python gpt4_eval.py --run_name_red llama3_8B_shp_0.0001_30_0.5 --run_name_blue $put the prefered answer in the dataset here`
 
+You need to provide the preferred response in the dataset as 'run_name_blue'. We provide an exmaple in example_data/dataset_prefer.json.
 
 ## Citation
 If you find our work helpful, please consider citing our paper:
