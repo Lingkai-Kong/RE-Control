@@ -102,8 +102,10 @@ def main():
         begin_word = 'User: '
     elif args.model_name == 'falcon_7B':
         begin_word = 'User: '
+    prompting = '''
+        A question from a curious user and an answer from an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user’s questions.\n'''
 
-    def tokenize(example):
+    def preprocessing(example):
         if args.dataset_name == 'hh_rlhf':
             replaced_text = example['prompt'].replace("Human:", begin_word)
             parts = replaced_text.rsplit("Assistant:", 1)  # Split the string at the last occurrence of "Assistant:"
@@ -111,15 +113,13 @@ def main():
         elif args.dataset_name == 'shp':
             text = example['history']
             result = begin_word + text + "\nAssistant:"    
-        tokenized = tokenizer(result, truncation=True)
-    
-        example["input_ids"] = tokenized["input_ids"]
-        example["attention_mask"] = tokenized["attention_mask"]
 
-        return example
+
+        return {'prompt': result}
+
 
     dataset = dataset.map(preprocessing)
-    dataloader = DataLoader(dataset['test'], batch_size=15) # only use the test set for now
+    dataloader = DataLoader(dataset['test'], batch_size=16) # only use the test set for now
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.pad_token_id = tokenizer.eos_token_id
