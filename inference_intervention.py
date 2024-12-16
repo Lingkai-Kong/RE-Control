@@ -18,12 +18,12 @@ class ValueFunction(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
         super(ValueFunction, self).__init__()
         self.fc1 = nn.Linear(input_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
+        #self.fc2 = nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = nn.Linear(hidden_dim, output_dim)
     
     def forward(self, x):
         x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
+        #x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
 
@@ -58,7 +58,7 @@ def main():
 
         value_model = ValueFunction(input_dim=4096, hidden_dim=4096, output_dim=1)
         ##load weights
-        value_model.load_state_dict(torch.load(f'trained_model/value_model_{args.model_name}_{args.dataset_name}_{args.value_lr}.pth'))
+        value_model.load_state_dict(torch.load(f'trained_model/value_model_{args.model_name}_{args.dataset_name}.pth'))
  
 
     MODEL_NAMES = { 
@@ -94,6 +94,10 @@ def main():
         dataset = dataset.remove_columns("rejected")
         for split in dataset.keys():
             dataset[split] = dataset[split].rename_column('chosen', 'prompt')
+        test_dataset = dataset['test']
+    elif args.dataset_name == 'shp':
+        test_file_path = 'dataset/test_dataset_shp.json'
+        test_dataset = load_dataset('json', data_files=test_file_path)
     
 
     if args.model_name == 'vicuna_7B':
@@ -119,7 +123,7 @@ def main():
 
 
     dataset = dataset.map(preprocessing)
-    dataloader = DataLoader(dataset['test'], batch_size=16) # only use the test set for now
+    dataloader = DataLoader(test_dataset, batch_size=16) # only use the test set for now
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.pad_token_id = tokenizer.eos_token_id

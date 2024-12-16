@@ -181,6 +181,10 @@ def main():
         dataset = dataset.remove_columns("rejected")
         for split in dataset.keys():
             dataset[split] = dataset[split].rename_column('chosen', 'prompt')
+        test_dataset = dataset['test']
+    elif args.dataset_name == 'shp':
+        test_file_path = 'dataset/test_dataset_shp.json'
+        test_dataset = load_dataset('json', data_files=test_file_path)
     
 
     if args.model_name == 'vicuna_7B':
@@ -210,7 +214,7 @@ def main():
     data_collator = DataCollatorReward(tokenizer=tokenizer)
 
     train_dataloader = DataLoader(dataset['train'], batch_size=32, collate_fn=data_collator)
-    test_dataloader = DataLoader(dataset['test'], batch_size=32, collate_fn=data_collator)
+    test_dataloader = DataLoader(test_dataset, batch_size=32, collate_fn=data_collator)
      
     token_wise_activations_train, mask_train, response_train = get_llm_activations(args.model_name, model,train_dataloader,tokenizer, device, args.num_samples)
     token_wise_activations_test, mask_test, response_test  = get_llm_activations(args.model_name, model, test_dataloader,tokenizer, device, args.num_samples)    
