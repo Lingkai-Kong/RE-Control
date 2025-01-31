@@ -53,12 +53,12 @@ You need to provide the preferred response in the dataset as 'run_name_blue'. We
 If you find our work helpful, please consider citing our paper:
 
 ```
-@article{Kong2024AligningLL,
-  title={Aligning Large Language Models with Representation Editing: A Control Perspective},
-  author={Lingkai Kong and Haorui Wang and Wenhao Mu and Yuanqi Du and Yuchen Zhuang and Yifei Zhou and Yue Song and Rongzhi Zhang and Kai Wang and Chao Zhang},
-  year={2024},
-  eprint={2406.05954},
-  archivePrefix={arXiv},
-  primaryClass={cs.AI}
+@inproceedings{
+kong2024aligning,
+title={Aligning Large Language Models with Representation Editing: A Control Perspective},
+author={Lingkai Kong and Haorui Wang and Wenhao Mu and Yuanqi Du and Yuchen Zhuang and Yifei Zhou and Yue Song and Rongzhi Zhang and Kai Wang and Chao Zhang},
+booktitle={The Thirty-eighth Annual Conference on Neural Information Processing Systems},
+year={2024},
+url={https://openreview.net/forum?id=yTTomSJsSW}
 }
 ```
